@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/
 import React from "react";
 import { useColorScheme } from "react-native";
 import { PaperProvider } from "react-native-paper";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import AuthFlow from "./src/AuthFlow";
 import { DIProvider } from "./src/core/di/DIProvider";
@@ -30,15 +31,16 @@ export default function App() {
   };
 
   return (
-    <DIProvider>
-      <AuthProvider>
-        {/* ✅ ProductProvider removed from here */}
-        <PaperProvider theme={theme}>
-          <NavigationContainer theme={navigationTheme}>
-            <AuthFlow />
-          </NavigationContainer>
-        </PaperProvider>
-      </AuthProvider>
-    </DIProvider>
+    <SafeAreaProvider>
+      <DIProvider>
+        <AuthProvider>
+          <PaperProvider theme={theme}>
+            <NavigationContainer theme={navigationTheme}>
+              <AuthFlow />
+            </NavigationContainer>
+          </PaperProvider>
+        </AuthProvider>
+      </DIProvider>
+    </SafeAreaProvider>
   );
 }

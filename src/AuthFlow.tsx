@@ -1,4 +1,5 @@
 import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
@@ -7,54 +8,40 @@ import { useAuth } from "./features/auth/presentation/context/authContext";
 import ForgotPasswordScreen from "./features/auth/presentation/screens/ForgotPasswordScreen";
 import LoginScreen from "./features/auth/presentation/screens/LoginScreen";
 import SignupScreen from "./features/auth/presentation/screens/SignupScreen";
-import { ProductProvider } from "./features/products/presentation/context/productContext";
-import AddProductScreen from "./features/products/presentation/screens/AddProductScreen";
-import ProductListScreen from "./features/products/presentation/screens/ProductListScreen";
-import UpdateProductScreen from "./features/products/presentation/screens/UpdateProductScreen";
-import SettingScreen from "./features/settings/SettingScreen";
+import { ParkingProvider } from "./features/parking/presentation/context/parkingContext";
+import HomeScreen from "./features/parking/presentation/screens/HomeScreen";
+import HistoryScreen from "./features/parking/presentation/screens/HistoryScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-
 function ContentTabs() {
-  const { logout } = useAuth();
-
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarStyle: { backgroundColor: '#fff', borderTopColor: '#E0E0F0' },
+        tabBarActiveTintColor: '#1A1D6E',
+        tabBarInactiveTintColor: '#9898B0',
       }}
-    // screenOptions={{
-    //   headerShown: true,
-    //   headerTitle: "Auth demo with React Navigation",
-    //   headerRight: () => (
-    //     <IconButton icon="logout" onPress={() => logout()} />
-    //   ),
-    //   headerTitleAlign: "left",
-    //   headerStyle: {
-    //     elevation: 0,
-    //     shadowOpacity: 0,
-    //   },
-    // }}
     >
       <Tab.Screen
         name="Home"
-        component={ProductListScreen}
+        component={HomeScreen}
         options={{
           tabBarLabel: "Home",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="house" size={24} color={color} iconStyle="solid" />
+            <FontAwesome6 name="house" size={22} color={color} iconStyle="solid" />
           ),
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={SettingScreen}
+        name="History"
+        component={HistoryScreen}
         options={{
-          tabBarLabel: "Profile",
+          tabBarLabel: "History",
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="user" size={24} color={color} iconStyle="solid" />
+            <MaterialCommunityIcons name="history" size={24} color={color} />
           ),
         }}
       />
@@ -64,29 +51,11 @@ function ContentTabs() {
 
 function AuthenticatedStack() {
   return (
-    <ProductProvider>
+    <ParkingProvider>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="App" component={ContentTabs} />
-        <Stack.Screen
-          name="AddProductScreen"
-          component={AddProductScreen}
-          options={{
-            title: "Add Product",
-            headerShown: true,
-            presentation: "modal",
-          }}
-        />
-        <Stack.Screen
-          name="UpdateProductScreen"
-          component={UpdateProductScreen}
-          options={{
-            title: "Update Product",
-            headerShown: true,
-            presentation: "modal",
-          }}
-        />
       </Stack.Navigator>
-    </ProductProvider>
+    </ParkingProvider>
   );
 }
 
