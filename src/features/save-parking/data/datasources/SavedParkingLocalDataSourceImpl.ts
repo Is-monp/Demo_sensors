@@ -22,4 +22,10 @@ export class SavedParkingLocalDataSourceImpl implements ISavedParkingDataSource 
     const all = await this.getAll();
     return all.find((p) => p.id === id) ?? null;
   }
+
+  async closeSession(id: string): Promise<void> {
+    const all = await this.getAll();
+    const updated = all.map((p) => p.id === id ? { ...p, active: false } : p);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  }
 }

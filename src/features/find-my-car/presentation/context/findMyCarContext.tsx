@@ -1,6 +1,7 @@
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -75,6 +76,7 @@ type FindMyCarContextType = {
   nav: FindCarNavigation | null;
   isLoading: boolean;
   hasTarget: boolean;
+  clearTarget: () => void;
 };
 
 const FindMyCarContext = createContext<FindMyCarContextType | undefined>(undefined);
@@ -94,7 +96,7 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       const all = await repo.getAll();
-      setTarget(all[0] ?? null);
+      setTarget(all.find((p) => p.active !== false) ?? null);
       setIsLoading(false);
     })();
   }, [repo]);
@@ -168,9 +170,11 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
     };
   }, [target, position, compassHeading, pressure, gpsReady]);
 
+  const clearTarget = useCallback(() => setTarget(null), []);
+
   const value = useMemo(
-    () => ({ nav, isLoading, hasTarget: target !== null }),
-    [nav, isLoading, target],
+    () => ({ nav, isLoading, hasTarget: target !== null, clearTarget }),
+    [nav, isLoading, target, clearTarget],
   );
 
   return (

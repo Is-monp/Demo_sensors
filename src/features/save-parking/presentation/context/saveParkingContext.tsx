@@ -68,6 +68,7 @@ export function SaveParkingProvider({
         savedAt: new Date(),
         level: session?.level,
         zone: address ?? session?.zone,
+        active: true,
         gps: sensors.gps,
         compass: sensors.compass,
         barometer: sensors.barometer,

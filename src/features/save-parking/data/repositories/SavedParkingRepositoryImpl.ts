@@ -16,4 +16,8 @@ export class SavedParkingRepositoryImpl implements SavedParkingRepository {
   getById(id: string): Promise<SavedParking | null> {
     return this.dataSource.getById(id);
   }
+
+  closeSession(id: string): Promise<void> {
+    return this.dataSource.closeSession(id);
+  }
 }

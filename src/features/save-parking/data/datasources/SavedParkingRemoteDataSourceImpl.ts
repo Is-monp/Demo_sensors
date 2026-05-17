@@ -51,6 +51,7 @@ export class SavedParkingRemoteDataSourceImpl implements ISavedParkingDataSource
       compass_degrees: parking.compass.degrees,
       compass_direction: parking.compass.direction,
       preassure_hpa: parking.barometer.pressure,
+      active: parking.active ?? true,
     };
   }
 
@@ -60,6 +61,7 @@ export class SavedParkingRemoteDataSourceImpl implements ISavedParkingDataSource
       savedAt: new Date(r.saved_at),
       level: r.level ?? undefined,
       zone: r.zone ?? undefined,
+      active: r.active ?? true,
       gps: { latitude: r.latitude, longitude: r.longitude, accuracy: null, status: 'active' },
       compass: { degrees: r.compass_degrees, direction: r.compass_direction, stable: true, status: 'active' },
       barometer: { pressure: r.preassure_hpa, altitudeLevel: '', status: 'active' },
@@ -108,5 +110,23 @@ export class SavedParkingRemoteDataSourceImpl implements ISavedParkingDataSource
 
     const data: Record<string, any>[] = await response.json();
     return data.length > 0 ? this.fromRecord(data[0]) : null;
+  }
+
+  async closeSession(id: string): Promise<void> {
+    const response = await this.authorizedFetch(this.url('/update'), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tableName: TABLE,
+        idColumn: '_id',
+        idValue: id,
+        updates: { active: false },
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(`Close session failed ${response.status}: ${body.message ?? response.statusText}`);
+    }
   }
 }

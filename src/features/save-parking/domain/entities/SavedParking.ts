@@ -25,6 +25,7 @@ export type SavedParking = {
   savedAt: Date;
   level?: string;
   zone?: string;
+  active?: boolean;
   gps: GPSData;
   compass: CompassData;
   barometer: BarometerData;

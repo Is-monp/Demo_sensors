@@ -1,5 +1,6 @@
+import { useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -12,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FindMyCarProvider, useFindMyCar } from '../context/findMyCarContext';
 import ParkingMapView from '../components/ParkingMapView';
+import { useSavedParkingList } from '@/src/features/save-parking/presentation/context/savedParkingListContext';
 
 const C = {
   brand: '#1A1D6E',
@@ -103,7 +105,22 @@ function CompassArrow({ relativeBearing, size = 200 }: { relativeBearing: number
 }
 
 function FindMyCarContent() {
-  const { nav, isLoading, hasTarget } = useFindMyCar();
+  const { nav, isLoading, hasTarget, clearTarget } = useFindMyCar();
+  const { closeSession } = useSavedParkingList();
+  const navigation = useNavigation();
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleEndSession = async () => {
+    if (!nav) return;
+    setIsClosing(true);
+    try {
+      await closeSession(nav.targetId);
+      clearTarget();
+      navigation.navigate('Home' as never);
+    } finally {
+      setIsClosing(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -232,9 +249,20 @@ function FindMyCarContent() {
         </View>
       </View>
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} activeOpacity={0.85}>
-        <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
+      {/* End Session */}
+      <TouchableOpacity
+        style={[styles.endSessionButton, isClosing && styles.endSessionButtonDisabled]}
+        activeOpacity={0.8}
+        onPress={handleEndSession}
+        disabled={isClosing}
+      >
+        {isClosing
+          ? <ActivityIndicator size="small" color="#C62828" />
+          : <MaterialCommunityIcons name="flag-checkered" size={18} color="#C62828" />
+        }
+        <Text style={styles.endSessionText}>
+          {isClosing ? 'Ending session…' : 'End Session'}
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -399,6 +427,23 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   debugSep: { fontSize: 11, color: C.border },
+
+  // End Session
+  endSessionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 20,
+    paddingVertical: 14,
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: '#C62828',
+    backgroundColor: '#FFF5F5',
+  },
+  endSessionButtonDisabled: { opacity: 0.5 },
+  endSessionText: { fontSize: 15, fontWeight: '600', color: '#C62828' },
 
   // Empty state
   emptyTitle: { fontSize: 18, fontWeight: '700', color: C.textPrimary, marginTop: 16, marginBottom: 8 },

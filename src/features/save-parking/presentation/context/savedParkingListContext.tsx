@@ -17,6 +17,7 @@ type SavedParkingListContextType = {
   latest: SavedParking | null;
   all: SavedParking[];
   refresh: () => Promise<void>;
+  closeSession: (id: string) => Promise<void>;
 };
 
 const SavedParkingListContext = createContext<SavedParkingListContextType | undefined>(undefined);
@@ -39,9 +40,14 @@ export function SavedParkingListProvider({ children }: { children: ReactNode }) 
     refresh();
   }, [refresh]);
 
+  const closeSession = useCallback(async (id: string) => {
+    await repo.closeSession(id);
+    await refresh();
+  }, [repo, refresh]);
+
   const value = useMemo(
-    () => ({ latest: all[0] ?? null, all, refresh }),
-    [all, refresh]
+    () => ({ latest: all.find((p) => p.active !== false) ?? null, all, refresh, closeSession }),
+    [all, refresh, closeSession]
   );
 
   return (

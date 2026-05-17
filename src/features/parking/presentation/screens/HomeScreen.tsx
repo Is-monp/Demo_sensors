@@ -1,3 +1,4 @@
+import { useSavedParkingList } from '@/src/features/save-parking/presentation/context/savedParkingListContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
 import {
@@ -9,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSavedParkingList } from '@/src/features/save-parking/presentation/context/savedParkingListContext';
 import { useParking } from '../context/parkingContext';
 
 function formatAccuracy(meters: number | null): string {
@@ -139,20 +139,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         >
           <MaterialCommunityIcons name="target" size={20} color={C.brand} />
           <Text style={styles.findCarText}>Find My Car</Text>
-        </TouchableOpacity>
-
-        {/* ── Charging Available ── */}
-        <TouchableOpacity style={styles.chargingCard} activeOpacity={0.8}>
-          <View style={styles.chargingIconBox}>
-            <MaterialCommunityIcons name="ev-station" size={22} color="#fff" />
-          </View>
-          <View style={styles.chargingTextGroup}>
-            <Text style={styles.chargingTitle}>Charging Available</Text>
-            <Text style={styles.chargingSubtitle}>
-              {chargingInfo?.availableSpots} spots free on {chargingInfo?.level}
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color={C.textMuted} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

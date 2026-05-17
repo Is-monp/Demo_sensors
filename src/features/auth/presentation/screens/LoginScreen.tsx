@@ -11,8 +11,8 @@ interface FormErrors {
 export default function LoginScreen({ navigation }: { navigation: any }) {
   const { login, error, clearError } = useAuth();
 
-  const [email, setEmail] = useState("a@a.com");
-  const [password, setPassword] = useState("ThePassword!1");
+  const [email, setEmail] = useState("isabellapalencia@uninorte.edu.co");
+  const [password, setPassword] = useState("Hola123.");
   const [obscurePassword, setObscurePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -106,7 +106,7 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
       </HelperText>
 
       {/* FORGOT PASSWORD */}
-      <View style={{ alignItems: "flex-end", marginBottom: 20 }}>
+      <View style={{ alignItems: "flex-end", marginBottom: 20}}>
         <Button mode="text" compact onPress={() => navigation.navigate("ForgotPassword")}>
           Forgot password?
         </Button>
@@ -125,7 +125,7 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
 
       <Button
         testID="create-account-button"
-        mode="text" onPress={() => navigation.navigate("Signup")}>
+        mode="text" onPress={() => navigation.navigate("Signup") }>
         Don&apos;t have an account? Sign Up
       </Button>
 
