@@ -20,6 +20,7 @@ export type SensorsState = {
   gps: GPSData;
   compass: CompassData;
   barometer: BarometerData;
+  pressureReady: boolean;
 };
 
 export function useSensors(): SensorsState {
@@ -43,8 +44,12 @@ export function useSensors(): SensorsState {
     status: 'calibrating',
   });
 
-  // Track last few magnetometer readings to detect stability
+  const [pressureReady, setPressureReady] = useState(false);
+
   const headingHistory = useRef<number[]>([]);
+  const pressureEma = useRef<number | null>(null);
+  const pressureCount = useRef(0);
+  const pressureReadyRef = useRef(false);
 
   // GPS
   useEffect(() => {
@@ -91,18 +96,28 @@ export function useSensors(): SensorsState {
     return () => sub.remove();
   }, []);
 
-  // Barometer
+  // Barometer — EMA(α=0.2), full float precision, ready after 8 readings (~4 s) (Steps 1, 2, 4)
   useEffect(() => {
-    Barometer.setUpdateInterval(1000);
-    const sub = Barometer.addListener(({ pressure }) => {
+    const EMA_ALPHA = 0.2;
+    const READY_COUNT = 8;
+    Barometer.setUpdateInterval(500);
+    const sub = Barometer.addListener(({ pressure: p }) => {
+      pressureEma.current = pressureEma.current === null
+        ? p
+        : EMA_ALPHA * p + (1 - EMA_ALPHA) * pressureEma.current;
+      pressureCount.current += 1;
       setBarometer({
-        pressure: Math.round(pressure * 10) / 10,
-        altitudeLevel: pressureToLevel(pressure),
+        pressure: pressureEma.current,
+        altitudeLevel: pressureToLevel(pressureEma.current),
         status: 'active',
       });
+      if (!pressureReadyRef.current && pressureCount.current >= READY_COUNT) {
+        pressureReadyRef.current = true;
+        setPressureReady(true);
+      }
     });
     return () => sub.remove();
   }, []);
 
-  return { gps, compass, barometer };
+  return { gps, compass, barometer, pressureReady };
 }

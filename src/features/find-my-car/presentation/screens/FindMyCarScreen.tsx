@@ -105,7 +105,7 @@ function CompassArrow({ relativeBearing, size = 200 }: { relativeBearing: number
 }
 
 function FindMyCarContent() {
-  const { nav, isLoading, hasTarget, clearTarget } = useFindMyCar();
+  const { nav, isLoading, hasTarget, pressureReady, clearTarget } = useFindMyCar();
   const { closeSession } = useSavedParkingList();
   const navigation = useNavigation();
   const [isClosing, setIsClosing] = useState(false);
@@ -142,12 +142,11 @@ function FindMyCarContent() {
     );
   }
 
-  const floorDeltaLabel =
-    nav.floorDelta !== null && nav.floorDelta !== 0
-      ? `Vehicle is ${Math.abs(nav.floorDelta)} floor${Math.abs(nav.floorDelta) > 1 ? 's' : ''} ${nav.floorDelta > 0 ? 'below' : 'above'} you`
-      : nav.floorDelta === 0
-        ? 'Vehicle is on the same floor'
-        : null;
+  const floorDeltaLabel = !pressureReady
+    ? 'Calibrating…'
+    : nav.floorDelta === null ? null
+    : nav.floorDelta === 0 ? 'Your car is on this floor!'
+    : `${nav.floorDelta < 0 ? 'Go up' : 'Go down'} ~${Math.abs(nav.floorDelta)} level${Math.abs(nav.floorDelta) > 1 ? 's' : ''}`;
 
   const zoneLabel = [nav.targetLevel, nav.targetZone].filter(Boolean).join(', ') || '—';
 
@@ -188,7 +187,12 @@ function FindMyCarContent() {
         {floorDeltaLabel && (
           <View style={styles.floorChipOverlay}>
             <MaterialCommunityIcons
-              name={nav.floorDelta! > 0 ? 'arrow-down' : 'arrow-up'}
+              name={
+                !pressureReady ? 'timer-sand'
+                : nav.floorDelta === 0 ? 'check-circle-outline'
+                : nav.floorDelta! > 0 ? 'arrow-down'
+                : 'arrow-up'
+              }
               size={12}
               color={C.brand}
             />

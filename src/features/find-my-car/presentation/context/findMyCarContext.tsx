@@ -72,10 +72,22 @@ function pressureToLevel(hPa: number): string {
   return 'Level P4';
 }
 
+//ISA barometric formula — converts hPa to metres ASL.
+// Using deltas (currentAlt - baseAlt) cancels out the sea-level reference,
+// leaving only the relative height between the two readings.
+const ISA_P0 = 1013.25;
+const ISA_EXP = 1 / 5.255;
+function pressureToAltitude(hPa: number): number {
+  return 44330 * (1 - Math.pow(hPa / ISA_P0, ISA_EXP));
+}
+const FLOOR_HEIGHT_M = 3.0;
+const FLOOR_HYSTERESIS = 0.6; //deadband in floors
+
 type FindMyCarContextType = {
   nav: FindCarNavigation | null;
   isLoading: boolean;
   hasTarget: boolean;
+  pressureReady: boolean;
   clearTarget: () => void;
 };
 
@@ -91,7 +103,8 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
   const [target, setTarget] = useState<SavedParking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { position, compassHeading, pressure, gpsReady } = useNavSensors();
+  const { position, compassHeading, pressure, pressureReady, isMoving, gpsReady } = useNavSensors();
+  const [floorDeltaDisplay, setFloorDeltaDisplay] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -134,11 +147,6 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
     const radius = arrivalRadius(target.gps.accuracy, position?.accuracy ?? null);
     const isArrived = distance !== null && distance <= radius;
 
-    const floorDelta =
-      pressure !== null
-        ? Math.round((target.barometer.pressure - pressure) / 12)
-        : null;
-
     const currentLevel =
       pressure !== null ? pressureToLevel(pressure) : 'Level P1';
 
@@ -163,18 +171,32 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
       mode,
       currentLevel,
       directionLabel: isArrived ? 'YOU\'VE ARRIVED' : dirLabel(relativeBearing ?? 0),
-      floorDelta,
+      floorDelta: floorDeltaDisplay,
       isArrived,
       position: positionCoords,
       targetGps,
     };
-  }, [target, position, compassHeading, pressure, gpsReady]);
+  }, [target, position, compassHeading, pressure, gpsReady, floorDeltaDisplay]);
+
+  // ISA altitude delta, hysteresis deadband, movement gate
+  useEffect(() => {
+    if (!pressureReady || pressure === null || !target) {
+      setFloorDeltaDisplay(null);
+      return;
+    }
+    const altDelta = pressureToAltitude(pressure) - pressureToAltitude(target.barometer.pressure);
+    const rawFloors = altDelta / FLOOR_HEIGHT_M;
+    const floors = Math.abs(rawFloors) < FLOOR_HYSTERESIS ? 0 : Math.round(rawFloors);
+    if (!isMoving || floors === 0) {
+      setFloorDeltaDisplay(floors);
+    }
+  }, [pressure, pressureReady, isMoving, target]);
 
   const clearTarget = useCallback(() => setTarget(null), []);
 
   const value = useMemo(
-    () => ({ nav, isLoading, hasTarget: target !== null, clearTarget }),
-    [nav, isLoading, target, clearTarget],
+    () => ({ nav, isLoading, hasTarget: target !== null, pressureReady, clearTarget }),
+    [nav, isLoading, target, pressureReady, clearTarget],
   );
 
   return (

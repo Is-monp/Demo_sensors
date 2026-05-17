@@ -123,10 +123,15 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
         {/* ── Save Parking Button ── */}
         <View style={styles.pButtonWrapper}>
-          <View style={styles.pButtonOuter}>
-            <TouchableOpacity style={styles.pButtonInner} onPress={() => navigation.navigate('SaveParking')} activeOpacity={0.85}>
+          <View style={[styles.pButtonOuter, !!latestSaved && styles.pButtonOuterDisabled]}>
+            <TouchableOpacity
+              style={[styles.pButtonInner, !!latestSaved && styles.pButtonInnerDisabled]}
+              onPress={() => navigation.navigate('SaveParking')}
+              activeOpacity={0.85}
+              disabled={!!latestSaved}
+            >
               <Text style={styles.pLetter}>P</Text>
-              <Text style={styles.pLabel}>Save Parking</Text>
+              <Text style={styles.pLabel}>{latestSaved ? 'Active Session' : 'Save Parking'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -297,6 +302,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  pButtonOuterDisabled: {
+    opacity: 0.45,
+  },
   pButtonInner: {
     width: 160,
     height: 160,
@@ -304,6 +312,9 @@ const styles = StyleSheet.create({
     backgroundColor: C.brand,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  pButtonInnerDisabled: {
+    backgroundColor: C.textMuted,
   },
   pLetter: {
     fontSize: 54,
