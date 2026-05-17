@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SavedParking } from '../../domain/entities/SavedParking';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
 import { ISavedParkingDataSource } from './iSavedParkingDataSource';
 
 const STORAGE_KEY = '@parksmart:saved_parkings';

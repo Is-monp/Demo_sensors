@@ -1,5 +1,5 @@
-import { SavedParking } from '../../domain/entities/SavedParking';
-import { SavedParkingRepository } from '../../domain/repositories/SavedParkingRepository';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
+import { SavedParkingRepository } from '@/src/shared/domain/repositories/SavedParkingRepository';
 import { ISavedParkingDataSource } from '../datasources/iSavedParkingDataSource';
 
 export class SavedParkingRepositoryImpl implements SavedParkingRepository {

@@ -105,10 +105,15 @@ function CompassArrow({ relativeBearing, size = 200 }: { relativeBearing: number
 }
 
 function FindMyCarContent() {
-  const { nav, isLoading, hasTarget, pressureReady, clearTarget } = useFindMyCar();
+  const { nav, isLoading, hasTarget, pressureReady, clearTarget, refresh } = useFindMyCar();
   const { closeSession } = useSavedParkingList();
   const navigation = useNavigation();
   const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    const unsub = navigation.addListener('focus', refresh);
+    return unsub;
+  }, [navigation, refresh]);
 
   const handleEndSession = async () => {
     if (!nav) return;

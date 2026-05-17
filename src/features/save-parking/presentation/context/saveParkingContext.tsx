@@ -9,8 +9,8 @@ import React, {
 import * as Location from 'expo-location';
 import { useDI } from '@/src/core/di/DIProvider';
 import { TOKENS } from '@/src/core/di/tokens';
-import { SavedParking } from '../../domain/entities/SavedParking';
-import { SavedParkingRepository } from '../../domain/repositories/SavedParkingRepository';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
+import { SavedParkingRepository } from '@/src/shared/domain/repositories/SavedParkingRepository';
 import { useSensors } from '../hooks/useSensors';
 
 async function reverseGeocode(lat: number, lon: number): Promise<string | undefined> {

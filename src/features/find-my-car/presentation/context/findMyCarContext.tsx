@@ -10,8 +10,8 @@ import React, {
 
 import { useDI } from '@/src/core/di/DIProvider';
 import { TOKENS } from '@/src/core/di/tokens';
-import { SavedParking } from '@/src/features/save-parking/domain/entities/SavedParking';
-import { SavedParkingRepository } from '@/src/features/save-parking/domain/repositories/SavedParkingRepository';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
+import { SavedParkingRepository } from '@/src/shared/domain/repositories/SavedParkingRepository';
 import type { FindCarNavigation, GpsCoords, NavigationMode } from '../../domain/entities/FindCarNavigation';
 import { useNavSensors } from '../hooks/useNavSensors';
 
@@ -89,6 +89,7 @@ type FindMyCarContextType = {
   hasTarget: boolean;
   pressureReady: boolean;
   clearTarget: () => void;
+  refresh: () => Promise<void>;
 };
 
 const FindMyCarContext = createContext<FindMyCarContextType | undefined>(undefined);
@@ -106,13 +107,14 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
   const { position, compassHeading, pressure, pressureReady, isMoving, gpsReady } = useNavSensors();
   const [floorDeltaDisplay, setFloorDeltaDisplay] = useState<number | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const all = await repo.getAll();
-      setTarget(all.find((p) => p.active !== false) ?? null);
-      setIsLoading(false);
-    })();
+  const refresh = useCallback(async () => {
+    const all = await repo.getAll();
+    setTarget(all.find((p) => p.active !== false) ?? null);
   }, [repo]);
+
+  useEffect(() => {
+    refresh().finally(() => setIsLoading(false));
+  }, [refresh]);
 
   const nav = useMemo((): FindCarNavigation | null => {
     if (!target) return null;
@@ -196,8 +198,8 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
   const clearTarget = useCallback(() => setTarget(null), []);
 
   const value = useMemo(
-    () => ({ nav, isLoading, hasTarget: target !== null, pressureReady, clearTarget }),
-    [nav, isLoading, target, pressureReady, clearTarget],
+    () => ({ nav, isLoading, hasTarget: target !== null, pressureReady, clearTarget, refresh }),
+    [nav, isLoading, target, pressureReady, clearTarget, refresh],
   );
 
   return (

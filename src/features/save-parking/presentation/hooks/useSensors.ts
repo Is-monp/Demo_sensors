@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
 import { Barometer, Magnetometer } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
-import { BarometerData, CompassData, GPSData } from '../../domain/entities/SavedParking';
+import { BarometerData, CompassData, GPSData } from '@/src/shared/domain/entities/SavedParking';
 
 const DIRECTIONS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
 
