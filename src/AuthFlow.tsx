@@ -13,6 +13,7 @@ import HomeScreen from "./features/parking/presentation/screens/HomeScreen";
 import HistoryScreen from "./features/parking/presentation/screens/HistoryScreen";
 import { SavedParkingListProvider } from "./features/save-parking/presentation/context/savedParkingListContext";
 import SaveParkingScreen from "./features/save-parking/presentation/screens/SaveParkingScreen";
+import FindMyCarScreen from "./features/find-my-car/presentation/screens/FindMyCarScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,6 +35,16 @@ function ContentTabs() {
           tabBarLabel: "Home",
           tabBarIcon: ({ color }) => (
             <FontAwesome6 name="house" size={22} color={color} iconStyle="solid" />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Find"
+        component={FindMyCarScreen}
+        options={{
+          tabBarLabel: "Find",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="target" size={24} color={color} />
           ),
         }}
       />

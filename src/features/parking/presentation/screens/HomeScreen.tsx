@@ -132,8 +132,12 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* ── Find My Car ── */}
-        <TouchableOpacity style={styles.findCarButton} activeOpacity={0.8}>
-          <MaterialCommunityIcons name="map-marker-outline" size={20} color={C.brand} />
+        <TouchableOpacity
+          style={styles.findCarButton}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('Find')}
+        >
+          <MaterialCommunityIcons name="target" size={20} color={C.brand} />
           <Text style={styles.findCarText}>Find My Car</Text>
         </TouchableOpacity>
 
