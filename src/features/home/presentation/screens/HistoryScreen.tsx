@@ -18,27 +18,9 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#EEEEF8',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1A1D6E',
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: '#9898B0',
-  },
+  safeArea: { flex: 1, backgroundColor: '#EEEEF8' },
+  header: { paddingHorizontal: 20, paddingVertical: 16 },
+  title: { fontSize: 22, fontWeight: '700', color: '#1A1D6E' },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  emptyText: { fontSize: 15, color: '#9898B0' },
 });

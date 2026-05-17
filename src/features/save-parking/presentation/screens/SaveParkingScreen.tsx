@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useParking } from '@/src/features/parking/presentation/context/parkingContext';
+import { useHome } from '@/src/features/home/presentation/context/homeContext';
 import React, { useEffect, useRef } from 'react';
 import {
   ScrollView,
@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SensorStatus } from '../../domain/entities/SavedParking';
+import { SensorStatus } from '@/src/shared/domain/entities/SavedParking';
 import { SaveParkingProvider, useSaveParking } from '../context/saveParkingContext';
 
 const C = {
@@ -204,9 +204,9 @@ function SaveParkingContent({ navigation }: { navigation: any }) {
 }
 
 export default function SaveParkingScreen({ navigation }: { navigation: any }) {
-  const { session } = useParking();
+  const { activeSession } = useHome();
   return (
-    <SaveParkingProvider session={session}>
+    <SaveParkingProvider session={activeSession ?? undefined}>
       <SaveParkingContent navigation={navigation} />
     </SaveParkingProvider>
   );

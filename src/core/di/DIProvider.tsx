@@ -7,8 +7,6 @@ import { AuthRepositoryImpl } from "@/src/features/auth/data/repositories/AuthRe
 import { LocalProductCacheSource } from "@/src/features/products/data/datasources/local/LocalProductCacheSource";
 import { ProductRemoteDataSourceImp } from "@/src/features/products/data/datasources/ProductRemoteDataSourceImp";
 import { ProductRepositoryImpl } from "@/src/features/products/data/repositories/ProductRepositoryImpl";
-import { ParkingLocalDataSourceImpl } from "@/src/features/parking/data/datasources/ParkingLocalDataSourceImpl";
-import { ParkingRepositoryImpl } from "@/src/features/parking/data/repositories/ParkingRepositoryImpl";
 import { SavedParkingRemoteDataSourceImpl } from "@/src/features/save-parking/data/datasources/SavedParkingRemoteDataSourceImpl";
 import { SavedParkingRepositoryImpl } from "@/src/features/save-parking/data/repositories/SavedParkingRepositoryImpl";
 import { Container } from "./container";
@@ -32,12 +30,6 @@ export function DIProvider({ children }: { children: React.ReactNode }) {
         c.register(TOKENS.ProductRemoteDS, remoteDS).
             register(TOKENS.LocalProductCacheDS, localCacheDS).
             register(TOKENS.ProductRepo, productRepo);
-
-        const parkingLocalDS = new ParkingLocalDataSourceImpl();
-        const parkingRepo = new ParkingRepositoryImpl(parkingLocalDS);
-
-        c.register(TOKENS.ParkingLocalDS, parkingLocalDS)
-            .register(TOKENS.ParkingRepo, parkingRepo);
 
         const savedParkingLocalDS = new SavedParkingRemoteDataSourceImpl(authDS);
         const savedParkingRepo = new SavedParkingRepositoryImpl(savedParkingLocalDS);

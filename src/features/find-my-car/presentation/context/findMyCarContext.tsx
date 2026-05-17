@@ -10,8 +10,8 @@ import React, {
 
 import { useDI } from '@/src/core/di/DIProvider';
 import { TOKENS } from '@/src/core/di/tokens';
-import { SavedParking } from '@/src/features/save-parking/domain/entities/SavedParking';
-import { SavedParkingRepository } from '@/src/features/save-parking/domain/repositories/SavedParkingRepository';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
+import { SavedParkingRepository } from '@/src/shared/domain/repositories/SavedParkingRepository';
 import type { FindCarNavigation, GpsCoords, NavigationMode } from '../../domain/entities/FindCarNavigation';
 import { useNavSensors } from '../hooks/useNavSensors';
 

@@ -1,4 +1,3 @@
-import { useSavedParkingList } from '@/src/features/save-parking/presentation/context/savedParkingListContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
 import {
@@ -10,7 +9,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useParking } from '../context/parkingContext';
+
+import { useHome } from '../context/homeContext';
 
 function formatAccuracy(meters: number | null): string {
   if (meters === null) return 'Unknown';
@@ -28,26 +28,20 @@ const C = {
   textSecondary: '#6B6B8A',
   textMuted: '#9898B0',
   border: '#E0E0F0',
-  chargingIconBg: '#1A1D6E',
   outerCircle: '#DFE0F0',
 };
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
-  const { session, chargingInfo, isLoading, durationLabel, expiringInLabel, refresh } = useParking();
-  const { latest: latestSaved, refresh: refreshSaved } = useSavedParkingList();
+  const { activeSession, isLoading, durationLabel, refresh } = useHome();
 
   useEffect(() => {
-    const unsub = navigation.addListener('focus', () => {
-      refresh();
-      refreshSaved();
-    });
+    const unsub = navigation.addListener('focus', refresh);
     return unsub;
-  }, [navigation, refresh, refreshSaved]);
+  }, [navigation, refresh]);
 
-  const orientation = latestSaved?.compass.direction ?? session?.orientation ?? '--';
-  const accuracyLabel = latestSaved
-    ? formatAccuracy(latestSaved.gps.accuracy)
-    : (session?.accuracyLabel ?? '--');
+  const orientation = activeSession?.compass.direction ?? '--';
+  const accuracyLabel = formatAccuracy(activeSession?.gps.accuracy ?? null);
+  const floorLabel = activeSession?.level ?? '--';
 
   if (isLoading) {
     return (
@@ -64,7 +58,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ── */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.logoRow}>
             <MaterialCommunityIcons name="parking" size={30} color={C.brand} />
@@ -73,8 +67,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           <MaterialCommunityIcons name="access-point" size={26} color={C.brand} />
         </View>
 
-        {/* ── Current Session Card ── */}
-        {latestSaved && (
+        {/* Current Session Card */}
+        {activeSession && (
           <>
             <View style={styles.sessionCard}>
               <View style={styles.greenStripe} />
@@ -86,7 +80,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
                   </View>
                 </View>
                 <Text style={styles.sessionLocation}>
-                  {latestSaved?.zone ?? session?.zone ?? '--'}
+                  {activeSession.zone ?? '--'}
                 </Text>
                 <View style={styles.sessionMetaRow}>
                   <View>
@@ -101,7 +95,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               </View>
             </View>
 
-            {/* ── Orientation + Expiring In ── */}
+            {/* Orientation + Floor */}
             <View style={styles.infoRow}>
               <View style={[styles.infoCard, { marginRight: 8 }]}>
                 <View style={styles.infoIconCircle}>
@@ -112,31 +106,31 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
               </View>
               <View style={[styles.infoCard, { marginLeft: 8 }]}>
                 <View style={styles.infoIconCircle}>
-                  <MaterialCommunityIcons name="timer-outline" size={20} color={C.brand} />
+                  <MaterialCommunityIcons name="layers-outline" size={20} color={C.brand} />
                 </View>
-                <Text style={styles.infoLabel}>Expiring In</Text>
-                <Text style={styles.infoValue}>{expiringInLabel}</Text>
+                <Text style={styles.infoLabel}>Floor</Text>
+                <Text style={styles.infoValue}>{floorLabel}</Text>
               </View>
             </View>
           </>
         )}
 
-        {/* ── Save Parking Button ── */}
+        {/* Save Parking Button */}
         <View style={styles.pButtonWrapper}>
-          <View style={[styles.pButtonOuter, !!latestSaved && styles.pButtonOuterDisabled]}>
+          <View style={[styles.pButtonOuter, !!activeSession && styles.pButtonOuterDisabled]}>
             <TouchableOpacity
-              style={[styles.pButtonInner, !!latestSaved && styles.pButtonInnerDisabled]}
+              style={[styles.pButtonInner, !!activeSession && styles.pButtonInnerDisabled]}
               onPress={() => navigation.navigate('SaveParking')}
               activeOpacity={0.85}
-              disabled={!!latestSaved}
+              disabled={!!activeSession}
             >
               <Text style={styles.pLetter}>P</Text>
-              <Text style={styles.pLabel}>{latestSaved ? 'Active Session' : 'Save Parking'}</Text>
+              <Text style={styles.pLabel}>{activeSession ? 'Active Session' : 'Save Parking'}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* ── Find My Car ── */}
+        {/* Find My Car */}
         <TouchableOpacity
           style={styles.findCarButton}
           activeOpacity={0.8}
@@ -151,38 +145,19 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  scroll: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-  },
+  safeArea: { flex: 1, backgroundColor: C.bg },
+  scroll: { flex: 1 },
+  container: { paddingHorizontal: 20, paddingBottom: 32 },
 
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  appName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: C.brand,
-    letterSpacing: 0.3,
-  },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  appName: { fontSize: 22, fontWeight: '700', color: C.brand, letterSpacing: 0.3 },
 
-  // Session Card
   sessionCard: {
     flexDirection: 'row',
     backgroundColor: C.cardBg,
@@ -195,68 +170,24 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  greenStripe: {
-    width: 4,
-    backgroundColor: C.green,
-  },
-  sessionContent: {
-    flex: 1,
-    padding: 16,
-  },
+  greenStripe: { width: 4, backgroundColor: C.green },
+  sessionContent: { flex: 1, padding: 16 },
   sessionTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
   },
-  sessionLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: C.textMuted,
-    letterSpacing: 1,
-  },
-  activeBadge: {
-    backgroundColor: C.greenBg,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  activeBadgeText: {
-    color: C.greenDark,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  sessionLocation: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: C.textPrimary,
-    marginBottom: 12,
-  },
-  sessionMetaRow: {
-    flexDirection: 'row',
-    gap: 32,
-  },
-  metaLabel: {
-    fontSize: 12,
-    color: C.textSecondary,
-    marginBottom: 2,
-  },
-  durationValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: C.green,
-  },
-  metaValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
+  sessionLabel: { fontSize: 11, fontWeight: '600', color: C.textMuted, letterSpacing: 1 },
+  activeBadge: { backgroundColor: C.greenBg, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
+  activeBadgeText: { color: C.greenDark, fontSize: 12, fontWeight: '600' },
+  sessionLocation: { fontSize: 22, fontWeight: '700', color: C.textPrimary, marginBottom: 12 },
+  sessionMetaRow: { flexDirection: 'row', gap: 32 },
+  metaLabel: { fontSize: 12, color: C.textSecondary, marginBottom: 2 },
+  durationValue: { fontSize: 16, fontWeight: '700', color: C.green },
+  metaValue: { fontSize: 16, fontWeight: '700', color: C.textPrimary },
 
-  // Info Cards Row
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 28,
-  },
+  infoRow: { flexDirection: 'row', marginBottom: 28 },
   infoCard: {
     flex: 1,
     backgroundColor: C.cardBg,
@@ -270,65 +201,26 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   infoIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: C.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
-  infoLabel: {
-    fontSize: 12,
-    color: C.textSecondary,
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
+  infoLabel: { fontSize: 12, color: C.textSecondary, marginBottom: 4 },
+  infoValue: { fontSize: 15, fontWeight: '700', color: C.textPrimary },
 
-  // P Button
-  pButtonWrapper: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  pButtonWrapper: { alignItems: 'center', marginBottom: 20 },
   pButtonOuter: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: C.outerCircle,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: C.outerCircle, alignItems: 'center', justifyContent: 'center',
   },
-  pButtonOuterDisabled: {
-    opacity: 0.45,
-  },
+  pButtonOuterDisabled: { opacity: 0.45 },
   pButtonInner: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: C.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center',
   },
-  pButtonInnerDisabled: {
-    backgroundColor: C.textMuted,
-  },
-  pLetter: {
-    fontSize: 54,
-    fontWeight: '800',
-    color: '#fff',
-    lineHeight: 60,
-  },
-  pLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#fff',
-  },
+  pButtonInnerDisabled: { backgroundColor: C.textMuted },
+  pLetter: { fontSize: 54, fontWeight: '800', color: '#fff', lineHeight: 60 },
+  pLabel: { fontSize: 13, fontWeight: '500', color: '#fff' },
 
-  // Find My Car
   findCarButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -341,45 +233,5 @@ const styles = StyleSheet.create({
     backgroundColor: C.cardBg,
     marginBottom: 20,
   },
-  findCarText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: C.brand,
-  },
-
-  // Charging Card
-  chargingCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: C.cardBg,
-    borderRadius: 16,
-    padding: 14,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  chargingIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: C.chargingIconBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chargingTextGroup: {
-    flex: 1,
-  },
-  chargingTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: C.textPrimary,
-  },
-  chargingSubtitle: {
-    fontSize: 12,
-    color: C.textSecondary,
-    marginTop: 2,
-  },
+  findCarText: { fontSize: 15, fontWeight: '600', color: C.brand },
 });

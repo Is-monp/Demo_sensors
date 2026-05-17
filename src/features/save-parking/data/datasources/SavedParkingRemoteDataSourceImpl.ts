@@ -1,7 +1,7 @@
 import { ILocalPreferences } from '@/src/core/iLocalPreferences';
 import { LocalPreferencesAsyncStorage } from '@/src/core/LocalPreferencesAsyncStorage';
 import { AuthRemoteDataSourceImpl } from '@/src/features/auth/data/datasources/AuthRemoteDataSourceImp';
-import { SavedParking } from '../../domain/entities/SavedParking';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
 import { ISavedParkingDataSource } from './iSavedParkingDataSource';
 
 const TABLE = 'saved_parkings';

@@ -1,4 +1,4 @@
-import { SavedParking } from '../../domain/entities/SavedParking';
+import { SavedParking } from '@/src/shared/domain/entities/SavedParking';
 
 export interface ISavedParkingDataSource {
   save(parking: SavedParking): Promise<void>;

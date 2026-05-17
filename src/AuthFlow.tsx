@@ -8,9 +8,9 @@ import { useAuth } from "./features/auth/presentation/context/authContext";
 import ForgotPasswordScreen from "./features/auth/presentation/screens/ForgotPasswordScreen";
 import LoginScreen from "./features/auth/presentation/screens/LoginScreen";
 import SignupScreen from "./features/auth/presentation/screens/SignupScreen";
-import { ParkingProvider } from "./features/parking/presentation/context/parkingContext";
-import HomeScreen from "./features/parking/presentation/screens/HomeScreen";
-import HistoryScreen from "./features/parking/presentation/screens/HistoryScreen";
+import { HomeProvider } from "./features/home/presentation/context/homeContext";
+import HomeScreen from "./features/home/presentation/screens/HomeScreen";
+import HistoryScreen from "./features/home/presentation/screens/HistoryScreen";
 import { SavedParkingListProvider } from "./features/save-parking/presentation/context/savedParkingListContext";
 import SaveParkingScreen from "./features/save-parking/presentation/screens/SaveParkingScreen";
 import FindMyCarScreen from "./features/find-my-car/presentation/screens/FindMyCarScreen";
@@ -64,7 +64,7 @@ function ContentTabs() {
 
 function AuthenticatedStack() {
   return (
-    <ParkingProvider>
+    <HomeProvider>
       <SavedParkingListProvider>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="App" component={ContentTabs} />
@@ -75,7 +75,7 @@ function AuthenticatedStack() {
           />
         </Stack.Navigator>
       </SavedParkingListProvider>
-    </ParkingProvider>
+    </HomeProvider>
   );
 }
 
