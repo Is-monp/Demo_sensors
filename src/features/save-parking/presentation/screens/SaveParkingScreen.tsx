@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useParking } from '@/src/features/parking/presentation/context/parkingContext';
 import React, { useEffect, useRef } from 'react';
 import {
   ScrollView,
@@ -203,8 +204,9 @@ function SaveParkingContent({ navigation }: { navigation: any }) {
 }
 
 export default function SaveParkingScreen({ navigation }: { navigation: any }) {
+  const { session } = useParking();
   return (
-    <SaveParkingProvider>
+    <SaveParkingProvider session={session}>
       <SaveParkingContent navigation={navigation} />
     </SaveParkingProvider>
   );

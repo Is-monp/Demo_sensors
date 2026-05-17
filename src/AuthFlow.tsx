@@ -11,6 +11,7 @@ import SignupScreen from "./features/auth/presentation/screens/SignupScreen";
 import { ParkingProvider } from "./features/parking/presentation/context/parkingContext";
 import HomeScreen from "./features/parking/presentation/screens/HomeScreen";
 import HistoryScreen from "./features/parking/presentation/screens/HistoryScreen";
+import { SavedParkingListProvider } from "./features/save-parking/presentation/context/savedParkingListContext";
 import SaveParkingScreen from "./features/save-parking/presentation/screens/SaveParkingScreen";
 
 const Stack = createStackNavigator();
@@ -53,14 +54,16 @@ function ContentTabs() {
 function AuthenticatedStack() {
   return (
     <ParkingProvider>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="App" component={ContentTabs} />
-        <Stack.Screen
-          name="SaveParking"
-          component={SaveParkingScreen}
-          options={{ presentation: 'modal', headerShown: false }}
-        />
-      </Stack.Navigator>
+      <SavedParkingListProvider>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="App" component={ContentTabs} />
+          <Stack.Screen
+            name="SaveParking"
+            component={SaveParkingScreen}
+            options={{ presentation: 'modal', headerShown: false }}
+          />
+        </Stack.Navigator>
+      </SavedParkingListProvider>
     </ParkingProvider>
   );
 }

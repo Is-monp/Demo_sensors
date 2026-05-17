@@ -6,12 +6,23 @@ import React, {
   useState,
 } from 'react';
 
+import * as Location from 'expo-location';
 import { useDI } from '@/src/core/di/DIProvider';
 import { TOKENS } from '@/src/core/di/tokens';
-import { useParking } from '@/src/features/parking/presentation/context/parkingContext';
 import { SavedParking } from '../../domain/entities/SavedParking';
 import { SavedParkingRepository } from '../../domain/repositories/SavedParkingRepository';
 import { useSensors } from '../hooks/useSensors';
+
+async function reverseGeocode(lat: number, lon: number): Promise<string | undefined> {
+  try {
+    const [place] = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lon });
+    if (!place) return undefined;
+    const parts = [place.name || place.street, place.city || place.district].filter(Boolean);
+    return parts.join(', ') || undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -27,14 +38,21 @@ export type SaveParkingContextType = {
 
 const SaveParkingContext = createContext<SaveParkingContextType | undefined>(undefined);
 
-export function SaveParkingProvider({ children }: { children: ReactNode }) {
+type SessionHint = { level?: string; zone?: string } | null | undefined;
+
+export function SaveParkingProvider({
+  children,
+  session,
+}: {
+  children: ReactNode;
+  session?: SessionHint;
+}) {
   const di = useDI();
   const repo = useMemo(
     () => di.resolve<SavedParkingRepository>(TOKENS.SavedParkingRepo),
     [di]
   );
 
-  const { session } = useParking();
   const sensors = useSensors();
   const [savedParking, setSavedParking] = useState<SavedParking | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -44,11 +62,12 @@ export function SaveParkingProvider({ children }: { children: ReactNode }) {
     try {
       setIsSaving(true);
       setError(null);
+      const address = await reverseGeocode(sensors.gps.latitude, sensors.gps.longitude);
       const entry: SavedParking = {
         id: generateId(),
         savedAt: new Date(),
         level: session?.level,
-        zone: session?.zone,
+        zone: address ?? session?.zone,
         gps: sensors.gps,
         compass: sensors.compass,
         barometer: sensors.barometer,

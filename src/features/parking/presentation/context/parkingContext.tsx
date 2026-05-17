@@ -1,6 +1,7 @@
 import React, {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -37,6 +38,7 @@ export type ParkingContextType = {
   durationLabel: string;
   expiringInLabel: string;
   saveParking: () => Promise<void>;
+  refresh: () => Promise<void>;
 };
 
 const ParkingContext = createContext<ParkingContextType | undefined>(undefined);
@@ -55,13 +57,17 @@ export function ParkingProvider({ children }: { children: ReactNode }) {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const refresh = useCallback(async () => {
+    const [sess, charging] = await Promise.all([
+      parkingRepo.getCurrentSession(),
+      parkingRepo.getChargingInfo(),
+    ]);
+    setSession(sess);
+    setChargingInfo(charging);
+  }, [parkingRepo]);
+
   useEffect(() => {
-    Promise.all([parkingRepo.getCurrentSession(), parkingRepo.getChargingInfo()])
-      .then(([sess, charging]) => {
-        setSession(sess);
-        setChargingInfo(charging);
-      })
-      .finally(() => setIsLoading(false));
+    refresh().finally(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -80,7 +86,7 @@ export function ParkingProvider({ children }: { children: ReactNode }) {
   };
 
   const value = useMemo(
-    () => ({ session, chargingInfo, isLoading, durationLabel, expiringInLabel, saveParking }),
+    () => ({ session, chargingInfo, isLoading, durationLabel, expiringInLabel, saveParking, refresh }),
     [session, chargingInfo, isLoading, tick]
   );
 

@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -9,7 +9,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSavedParkingList } from '@/src/features/save-parking/presentation/context/savedParkingListContext';
 import { useParking } from '../context/parkingContext';
+
+function formatAccuracy(meters: number | null): string {
+  if (meters === null) return 'Unknown';
+  return `${meters <= 5 ? 'High' : meters <= 20 ? 'Medium' : 'Low'} (±${Math.round(meters)}m)`;
+}
 
 const C = {
   brand: '#1A1D6E',
@@ -27,8 +33,21 @@ const C = {
 };
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
-  const { session, chargingInfo, isLoading, durationLabel, expiringInLabel } =
-    useParking();
+  const { session, chargingInfo, isLoading, durationLabel, expiringInLabel, refresh } = useParking();
+  const { latest: latestSaved, refresh: refreshSaved } = useSavedParkingList();
+
+  useEffect(() => {
+    const unsub = navigation.addListener('focus', () => {
+      refresh();
+      refreshSaved();
+    });
+    return unsub;
+  }, [navigation, refresh, refreshSaved]);
+
+  const orientation = latestSaved?.compass.direction ?? session?.orientation ?? '--';
+  const accuracyLabel = latestSaved
+    ? formatAccuracy(latestSaved.gps.accuracy)
+    : (session?.accuracyLabel ?? '--');
 
   if (isLoading) {
     return (
@@ -55,48 +74,52 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* ── Current Session Card ── */}
-        <View style={styles.sessionCard}>
-          <View style={styles.greenStripe} />
-          <View style={styles.sessionContent}>
-            <View style={styles.sessionTopRow}>
-              <Text style={styles.sessionLabel}>CURRENT SESSION</Text>
-              <View style={styles.activeBadge}>
-                <Text style={styles.activeBadgeText}>Active</Text>
+        {latestSaved && (
+          <>
+            <View style={styles.sessionCard}>
+              <View style={styles.greenStripe} />
+              <View style={styles.sessionContent}>
+                <View style={styles.sessionTopRow}>
+                  <Text style={styles.sessionLabel}>CURRENT SESSION</Text>
+                  <View style={styles.activeBadge}>
+                    <Text style={styles.activeBadgeText}>Active</Text>
+                  </View>
+                </View>
+                <Text style={styles.sessionLocation}>
+                  {latestSaved?.zone ?? session?.zone ?? '--'}
+                </Text>
+                <View style={styles.sessionMetaRow}>
+                  <View>
+                    <Text style={styles.metaLabel}>Duration</Text>
+                    <Text style={styles.durationValue}>{durationLabel}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.metaLabel}>Accuracy</Text>
+                    <Text style={styles.metaValue}>{accuracyLabel}</Text>
+                  </View>
+                </View>
               </View>
             </View>
-            <Text style={styles.sessionLocation}>
-              {session?.level}, {session?.zone}
-            </Text>
-            <View style={styles.sessionMetaRow}>
-              <View>
-                <Text style={styles.metaLabel}>Duration</Text>
-                <Text style={styles.durationValue}>{durationLabel}</Text>
-              </View>
-              <View>
-                <Text style={styles.metaLabel}>Accuracy</Text>
-                <Text style={styles.metaValue}>{session?.accuracyLabel}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
 
-        {/* ── Orientation + Expiring In ── */}
-        <View style={styles.infoRow}>
-          <View style={[styles.infoCard, { marginRight: 8 }]}>
-            <View style={styles.infoIconCircle}>
-              <MaterialCommunityIcons name="compass-outline" size={20} color={C.brand} />
+            {/* ── Orientation + Expiring In ── */}
+            <View style={styles.infoRow}>
+              <View style={[styles.infoCard, { marginRight: 8 }]}>
+                <View style={styles.infoIconCircle}>
+                  <MaterialCommunityIcons name="compass-outline" size={20} color={C.brand} />
+                </View>
+                <Text style={styles.infoLabel}>Orientation</Text>
+                <Text style={styles.infoValue}>{orientation}</Text>
+              </View>
+              <View style={[styles.infoCard, { marginLeft: 8 }]}>
+                <View style={styles.infoIconCircle}>
+                  <MaterialCommunityIcons name="timer-outline" size={20} color={C.brand} />
+                </View>
+                <Text style={styles.infoLabel}>Expiring In</Text>
+                <Text style={styles.infoValue}>{expiringInLabel}</Text>
+              </View>
             </View>
-            <Text style={styles.infoLabel}>Orientation</Text>
-            <Text style={styles.infoValue}>{session?.orientation}</Text>
-          </View>
-          <View style={[styles.infoCard, { marginLeft: 8 }]}>
-            <View style={styles.infoIconCircle}>
-              <MaterialCommunityIcons name="timer-outline" size={20} color={C.brand} />
-            </View>
-            <Text style={styles.infoLabel}>Expiring In</Text>
-            <Text style={styles.infoValue}>{expiringInLabel}</Text>
-          </View>
-        </View>
+          </>
+        )}
 
         {/* ── Save Parking Button ── */}
         <View style={styles.pButtonWrapper}>
