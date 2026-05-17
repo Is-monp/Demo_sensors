@@ -1,5 +1,10 @@
 export type NavigationMode = 'gps' | 'indoor';
 
+export type GpsCoords = {
+  latitude: number;
+  longitude: number;
+};
+
 export type FindCarNavigation = {
   targetId: string;
   targetLevel?: string;
@@ -13,4 +18,7 @@ export type FindCarNavigation = {
   currentLevel: string;
   directionLabel: string;
   floorDelta: number | null;
+  isArrived: boolean;
+  position: GpsCoords | null;
+  targetGps: GpsCoords;
 };

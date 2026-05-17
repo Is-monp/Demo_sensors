@@ -11,7 +11,7 @@ import { useDI } from '@/src/core/di/DIProvider';
 import { TOKENS } from '@/src/core/di/tokens';
 import { SavedParking } from '@/src/features/save-parking/domain/entities/SavedParking';
 import { SavedParkingRepository } from '@/src/features/save-parking/domain/repositories/SavedParkingRepository';
-import { FindCarNavigation, NavigationMode } from '../../domain/entities/FindCarNavigation';
+import type { FindCarNavigation, GpsCoords, NavigationMode } from '../../domain/entities/FindCarNavigation';
 import { useNavSensors } from '../hooks/useNavSensors';
 
 function haversineMeters(
@@ -42,7 +42,6 @@ function bearingDeg(
     Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
-
 function dirLabel(relativeBearing: number): string {
   const b = ((relativeBearing % 360) + 360) % 360;
   if (b < 22.5 || b >= 337.5) return 'STRAIGHT AHEAD';
@@ -53,6 +52,16 @@ function dirLabel(relativeBearing: number): string {
   if (b < 247.5) return 'SHARP LEFT';
   if (b < 292.5) return 'TURN LEFT';
   return 'BEAR LEFT';
+}
+
+// Cap each accuracy reading so poor GPS doesn't create a huge arrival bubble.
+const MAX_ACCURACY_CAP = 8;
+const MIN_ARRIVAL_RADIUS = 3;
+
+function arrivalRadius(savedAccuracy: number | null, currentAccuracy: number | null): number {
+  const s = Math.min(savedAccuracy ?? MAX_ACCURACY_CAP, MAX_ACCURACY_CAP);
+  const c = Math.min(currentAccuracy ?? MAX_ACCURACY_CAP, MAX_ACCURACY_CAP);
+  return Math.max(Math.sqrt(s * s + c * c), MIN_ARRIVAL_RADIUS);
 }
 
 function pressureToLevel(hPa: number): string {
@@ -120,6 +129,9 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
       relativeBearing = 0;
     }
 
+    const radius = arrivalRadius(target.gps.accuracy, position?.accuracy ?? null);
+    const isArrived = distance !== null && distance <= radius;
+
     const floorDelta =
       pressure !== null
         ? Math.round((target.barometer.pressure - pressure) / 12)
@@ -127,6 +139,15 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
 
     const currentLevel =
       pressure !== null ? pressureToLevel(pressure) : 'Level P1';
+
+    const positionCoords: GpsCoords | null = position
+      ? { latitude: position.latitude, longitude: position.longitude }
+      : null;
+
+    const targetGps: GpsCoords = {
+      latitude: target.gps.latitude,
+      longitude: target.gps.longitude,
+    };
 
     return {
       targetId: target.id,
@@ -139,8 +160,11 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
       compassHeading,
       mode,
       currentLevel,
-      directionLabel: dirLabel(relativeBearing ?? 0),
+      directionLabel: isArrived ? 'YOU\'VE ARRIVED' : dirLabel(relativeBearing ?? 0),
       floorDelta,
+      isArrived,
+      position: positionCoords,
+      targetGps,
     };
   }, [target, position, compassHeading, pressure, gpsReady]);
 

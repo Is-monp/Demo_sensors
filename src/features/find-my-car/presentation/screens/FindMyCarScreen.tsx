@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FindMyCarProvider, useFindMyCar } from '../context/findMyCarContext';
+import ParkingMapView from '../components/ParkingMapView';
 
 const C = {
   brand: '#1A1D6E',
@@ -37,7 +38,7 @@ function timeAgo(savedAt: Date): string {
   return mins > 0 ? `${hours}h ${mins}m ago` : `${hours}h ago`;
 }
 
-function CompassArrow({ relativeBearing }: { relativeBearing: number }) {
+function CompassArrow({ relativeBearing, size = 200 }: { relativeBearing: number; size?: number }) {
   const spinValue = useRef(new Animated.Value(relativeBearing)).current;
   const accumulated = useRef(relativeBearing);
 
@@ -60,15 +61,40 @@ function CompassArrow({ relativeBearing }: { relativeBearing: number }) {
     outputRange: ['-9999deg', '9999deg'],
   });
 
+  const ring = size * 0.95;
+  const inner = size * 0.8;
+  const headW = size * 0.22;
+  const headH = size * 0.54;
+  const tailW = size * 0.14;
+  const tailH = size * 0.34;
+
   return (
-    <View style={styles.compassOuter}>
-      <View style={styles.compassRing}>
-        <View style={styles.compassInner}>
-          <Animated.View
-            style={[styles.arrowWrapper, { transform: [{ rotate }] }]}
-          >
-            <View style={styles.arrowHead} />
-            <View style={styles.arrowTail} />
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{
+        width: ring, height: ring, borderRadius: ring / 2,
+        backgroundColor: C.compassRing, alignItems: 'center', justifyContent: 'center',
+      }}>
+        <View style={{
+          width: inner, height: inner, borderRadius: inner / 2,
+          backgroundColor: C.card, alignItems: 'center', justifyContent: 'center',
+          shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
+        }}>
+          <Animated.View style={[{ alignItems: 'center' }, { transform: [{ rotate }] }]}>
+            <View style={{
+              width: 0, height: 0,
+              borderLeftWidth: headW, borderRightWidth: headW, borderBottomWidth: headH,
+              borderStyle: 'solid',
+              borderLeftColor: 'transparent', borderRightColor: 'transparent',
+              borderBottomColor: C.brand,
+            }} />
+            <View style={{
+              width: 0, height: 0,
+              borderLeftWidth: tailW, borderRightWidth: tailW, borderTopWidth: tailH,
+              borderStyle: 'solid',
+              borderLeftColor: 'transparent', borderRightColor: 'transparent',
+              borderTopColor: 'rgba(26, 29, 110, 0.35)',
+            }} />
           </Animated.View>
         </View>
       </View>
@@ -90,11 +116,7 @@ function FindMyCarContent() {
   if (!hasTarget || !nav) {
     return (
       <SafeAreaView style={[styles.safeArea, styles.centered]}>
-        <MaterialCommunityIcons
-          name="map-marker-off-outline"
-          size={56}
-          color={C.textMuted}
-        />
+        <MaterialCommunityIcons name="map-marker-off-outline" size={56} color={C.textMuted} />
         <Text style={styles.emptyTitle}>No Saved Location</Text>
         <Text style={styles.emptySubtitle}>
           Save your parking spot first using the P button on the home screen.
@@ -110,98 +132,100 @@ function FindMyCarContent() {
         ? 'Vehicle is on the same floor'
         : null;
 
-  const zoneLabel = [nav.targetLevel, nav.targetZone]
-    .filter(Boolean)
-    .join(', ') || '—';
+  const zoneLabel = [nav.targetLevel, nav.targetZone].filter(Boolean).join(', ') || '—';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoRow}>
-          <MaterialCommunityIcons name="parking" size={30} color={C.brand} />
+          <MaterialCommunityIcons name="parking" size={28} color={C.brand} />
           <Text style={styles.appName}>ParkSmart</Text>
         </View>
-        <MaterialCommunityIcons name="access-point" size={26} color={C.brand} />
+        <MaterialCommunityIcons name="access-point" size={24} color={C.brand} />
       </View>
 
-      {/* Indoor mode banner */}
-      {nav.mode === 'indoor' && (
-        <View style={styles.indoorBanner}>
-          <MaterialCommunityIcons
-            name="wifi-off"
-            size={18}
-            color={C.indoorText}
-            style={{ marginRight: 8 }}
+      {/* Map */}
+      <View style={styles.mapContainer}>
+        {nav.position && nav.targetGps ? (
+          <ParkingMapView
+            userPosition={nav.position}
+            targetPosition={nav.targetGps}
           />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.indoorTitle}>Interior Mode Active</Text>
-            <Text style={styles.indoorBody}>
-              GPS signal weak. Using Compass & Floor sensors only.
-            </Text>
+        ) : (
+          <View style={[styles.mapPlaceholder]}>
+            <MaterialCommunityIcons name="map-outline" size={40} color={C.textMuted} />
+            <Text style={styles.mapPlaceholderText}>Waiting for GPS…</Text>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Floor delta chip */}
-      {floorDeltaLabel && (
-        <View style={styles.floorChipWrapper}>
-          <View style={styles.floorChip}>
+        {/* Indoor overlay badge */}
+        {nav.mode === 'indoor' && (
+          <View style={styles.indoorBadge}>
+            <MaterialCommunityIcons name="wifi-off" size={13} color={C.indoorText} />
+            <Text style={styles.indoorBadgeText}>Interior Mode</Text>
+          </View>
+        )}
+
+        {/* Floor chip overlaid on map */}
+        {floorDeltaLabel && (
+          <View style={styles.floorChipOverlay}>
             <MaterialCommunityIcons
               name={nav.floorDelta! > 0 ? 'arrow-down' : 'arrow-up'}
-              size={14}
+              size={12}
               color={C.brand}
             />
             <Text style={styles.floorChipText}>{floorDeltaLabel}</Text>
           </View>
-        </View>
-      )}
-
-      {/* Compass */}
-      <View style={styles.compassSection}>
-        <CompassArrow relativeBearing={nav.relativeBearing ?? 0} />
+        )}
       </View>
 
-      {/* Distance + direction */}
-      <View style={styles.distanceSection}>
-        {nav.distance !== null ? (
-          <>
-            <View style={styles.distancePill}>
-              <Text style={styles.distanceNumber}>{nav.distance}</Text>
-              <Text style={styles.distanceUnit}>METERS</Text>
+      {/* Compass + distance row */}
+      <View style={styles.navRow}>
+        {/* Small compass */}
+        <View style={styles.compassWrapper}>
+          {nav.isArrived ? (
+            <View style={styles.arrivedCircleOuter}>
+              <View style={styles.arrivedCircleInner}>
+                <MaterialCommunityIcons name="check-bold" size={28} color="#fff" />
+              </View>
             </View>
-            <Text style={styles.directionLabel}>{nav.directionLabel}</Text>
-          </>
-        ) : (
-          <>
-            <View style={styles.distancePill}>
-              <Text style={styles.distanceUnit}>LOCATING</Text>
-            </View>
-            <Text style={styles.directionLabel}>{nav.directionLabel}</Text>
-          </>
-        )}
+          ) : (
+            <CompassArrow relativeBearing={nav.relativeBearing ?? 0} size={100} />
+          )}
+        </View>
+
+        {/* Direction */}
+        <View style={styles.distanceBlock}>
+          <Text style={nav.isArrived ? styles.arrivedLabel : styles.directionLabel}>
+            {nav.directionLabel}
+          </Text>
+        </View>
+      </View>
+
+      {/* Debug panel — remove when compass is validated */}
+      <View style={styles.debugRow}>
+        <Text style={styles.debugText}>hdg {nav.compassHeading}°</Text>
+        <Text style={styles.debugSep}>·</Text>
+        <Text style={styles.debugText}>brg {nav.bearing !== null ? `${Math.round(nav.bearing)}°` : '—'}</Text>
+        <Text style={styles.debugSep}>·</Text>
+        <Text style={styles.debugText}>rel {nav.relativeBearing !== null ? `${Math.round(nav.relativeBearing)}°` : '—'}</Text>
+        <Text style={styles.debugSep}>·</Text>
+        <Text style={styles.debugText}>gps {nav.mode}</Text>
       </View>
 
       {/* Info cards */}
       <View style={styles.infoRow}>
         <View style={[styles.infoCard, { marginRight: 8 }]}>
           <View style={styles.infoIconCircle}>
-            <MaterialCommunityIcons
-              name="map-marker-outline"
-              size={18}
-              color={C.brand}
-            />
+            <MaterialCommunityIcons name="map-marker-outline" size={16} color={C.brand} />
           </View>
           <Text style={styles.infoLabel}>ZONE</Text>
           <Text style={styles.infoValue}>{zoneLabel}</Text>
         </View>
         <View style={[styles.infoCard, { marginLeft: 8 }]}>
           <View style={styles.infoIconCircle}>
-            <MaterialCommunityIcons
-              name="clock-outline"
-              size={18}
-              color={C.brand}
-            />
+            <MaterialCommunityIcons name="clock-outline" size={16} color={C.brand} />
           </View>
           <Text style={styles.infoLabel}>PARKED</Text>
           <Text style={styles.infoValue}>{timeAgo(nav.savedAt)}</Text>
@@ -210,7 +234,7 @@ function FindMyCarContent() {
 
       {/* FAB */}
       <TouchableOpacity style={styles.fab} activeOpacity={0.85}>
-        <MaterialCommunityIcons name="shimmer" size={26} color="#fff" />
+        <MaterialCommunityIcons name="shimmer" size={24} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -225,245 +249,158 @@ export default function FindMyCarScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  centered: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
+  safeArea: { flex: 1, backgroundColor: C.bg },
+  centered: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
 
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  appName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: C.brand,
-    letterSpacing: 0.3,
-  },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  appName: { fontSize: 20, fontWeight: '700', color: C.brand, letterSpacing: 0.3 },
 
-  // Indoor banner
-  indoorBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: C.indoorBg,
-    borderLeftWidth: 4,
-    borderLeftColor: C.indoorBorder,
-    marginHorizontal: 20,
-    borderRadius: 10,
-    padding: 12,
+  // Map
+  mapContainer: {
+    flex: 1,
+    marginHorizontal: 16,
     marginBottom: 12,
-  },
-  indoorTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: C.indoorText,
-    marginBottom: 2,
-  },
-  indoorBody: {
-    fontSize: 12,
-    color: C.indoorText,
-    lineHeight: 17,
-  },
-
-  // Floor chip
-  floorChipWrapper: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  floorChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    borderRadius: 16,
+    overflow: 'hidden',
     backgroundColor: C.card,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: C.border,
-  },
-  floorChipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: C.textPrimary,
-  },
-
-  // Compass
-  compassSection: {
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  compassOuter: {
-    width: 200,
-    height: 200,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compassRing: {
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    backgroundColor: C.compassRing,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  compassInner: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: C.card,
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
-  arrowWrapper: {
+  mapPlaceholder: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  arrowHead: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 22,
-    borderRightWidth: 22,
-    borderBottomWidth: 54,
-    borderStyle: 'solid',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: C.brand,
-  },
-  arrowTail: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 14,
-    borderRightWidth: 14,
-    borderTopWidth: 34,
-    borderStyle: 'solid',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: 'rgba(26, 29, 110, 0.35)',
+  mapPlaceholderText: {
+    fontSize: 13,
+    color: C.textMuted,
   },
 
-  // Distance
-  distanceSection: {
+  // Overlays on the map
+  indoorBadge: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    gap: 4,
+    backgroundColor: C.indoorBg,
+    borderWidth: 1,
+    borderColor: C.indoorBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
   },
+  indoorBadgeText: { fontSize: 12, fontWeight: '600', color: C.indoorText },
+  floorChipOverlay: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: C.card,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  floorChipText: { fontSize: 12, fontWeight: '500', color: C.textPrimary },
+
+  // Nav row (compass + distance)
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    gap: 16,
+  },
+  compassWrapper: { alignItems: 'center', justifyContent: 'center' },
+
+  distanceBlock: { flex: 1, alignItems: 'flex-start', gap: 4 },
   distancePill: {
     flexDirection: 'row',
     alignItems: 'baseline',
     backgroundColor: C.brand,
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 14,
-    gap: 8,
-    marginBottom: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 6,
   },
-  distanceNumber: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#fff',
-    lineHeight: 36,
+  distanceNumber: { fontSize: 28, fontWeight: '800', color: '#fff', lineHeight: 32 },
+  distanceUnit: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.85)', letterSpacing: 1 },
+  directionLabel: { fontSize: 18, fontWeight: '700', color: C.textPrimary, letterSpacing: 1.5 },
+  arrivedLabel: { fontSize: 18, fontWeight: '700', color: '#2E7D32', letterSpacing: 1.5 },
+  arrivedPill: { backgroundColor: '#4CAF50' },
+  arrivedCircleOuter: {
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: '#E8F5E9', alignItems: 'center', justifyContent: 'center',
   },
-  distanceUnit: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.85)',
-    letterSpacing: 1,
-  },
-  directionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: C.textSecondary,
-    letterSpacing: 1.5,
+  arrivedCircleInner: {
+    width: 76, height: 76, borderRadius: 38,
+    backgroundColor: '#4CAF50', alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#4CAF50', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35, shadowRadius: 12, elevation: 6,
   },
 
   // Info cards
-  infoRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
+  infoRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 16 },
   infoCard: {
-    flex: 1,
-    backgroundColor: C.card,
-    borderRadius: 16,
-    padding: 14,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
+    flex: 1, backgroundColor: C.card, borderRadius: 14,
+    padding: 12, alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
   },
   infoIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: C.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
-  infoLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: C.textMuted,
-    letterSpacing: 1.2,
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: C.textPrimary,
-    textAlign: 'center',
-  },
+  infoLabel: { fontSize: 10, fontWeight: '700', color: C.textMuted, letterSpacing: 1.2, marginBottom: 2 },
+  infoValue: { fontSize: 12, fontWeight: '700', color: C.textPrimary, textAlign: 'center' },
 
   // FAB
   fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: C.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.22,
-    shadowRadius: 6,
+    position: 'absolute', bottom: 20, right: 20,
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: C.brand, alignItems: 'center', justifyContent: 'center',
+    elevation: 6, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.22, shadowRadius: 6,
   },
 
+  // Debug
+  debugRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginBottom: 10,
+    paddingHorizontal: 16,
+  },
+  debugText: {
+    fontSize: 11,
+    fontFamily: 'monospace',
+    color: C.textMuted,
+    backgroundColor: C.card,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  debugSep: { fontSize: 11, color: C.border },
+
   // Empty state
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: C.textPrimary,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: C.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: C.textPrimary, marginTop: 16, marginBottom: 8 },
+  emptySubtitle: { fontSize: 14, color: C.textSecondary, textAlign: 'center', lineHeight: 20 },
 });
