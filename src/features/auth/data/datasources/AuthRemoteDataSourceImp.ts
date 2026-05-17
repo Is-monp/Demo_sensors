@@ -31,6 +31,7 @@ export class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         const refreshToken = data["refreshToken"];
         await this.prefs.storeData("token", token);
         await this.prefs.storeData("refreshToken", refreshToken);
+        await this.prefs.storeData("userEmail", email);
         //console.log("Token:", token, "\nRefresh Token:", refreshToken);
         return Promise.resolve();
       } else {

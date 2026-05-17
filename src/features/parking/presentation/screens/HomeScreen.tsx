@@ -26,8 +26,8 @@ const C = {
   outerCircle: '#DFE0F0',
 };
 
-export default function HomeScreen() {
-  const { session, chargingInfo, isLoading, durationLabel, expiringInLabel, saveParking } =
+export default function HomeScreen({ navigation }: { navigation: any }) {
+  const { session, chargingInfo, isLoading, durationLabel, expiringInLabel } =
     useParking();
 
   if (isLoading) {
@@ -101,7 +101,7 @@ export default function HomeScreen() {
         {/* ── Save Parking Button ── */}
         <View style={styles.pButtonWrapper}>
           <View style={styles.pButtonOuter}>
-            <TouchableOpacity style={styles.pButtonInner} onPress={saveParking} activeOpacity={0.85}>
+            <TouchableOpacity style={styles.pButtonInner} onPress={() => navigation.navigate('SaveParking')} activeOpacity={0.85}>
               <Text style={styles.pLetter}>P</Text>
               <Text style={styles.pLabel}>Save Parking</Text>
             </TouchableOpacity>

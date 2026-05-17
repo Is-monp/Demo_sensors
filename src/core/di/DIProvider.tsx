@@ -9,6 +9,8 @@ import { ProductRemoteDataSourceImp } from "@/src/features/products/data/datasou
 import { ProductRepositoryImpl } from "@/src/features/products/data/repositories/ProductRepositoryImpl";
 import { ParkingLocalDataSourceImpl } from "@/src/features/parking/data/datasources/ParkingLocalDataSourceImpl";
 import { ParkingRepositoryImpl } from "@/src/features/parking/data/repositories/ParkingRepositoryImpl";
+import { SavedParkingRemoteDataSourceImpl } from "@/src/features/save-parking/data/datasources/SavedParkingRemoteDataSourceImpl";
+import { SavedParkingRepositoryImpl } from "@/src/features/save-parking/data/repositories/SavedParkingRepositoryImpl";
 import { Container } from "./container";
 const DIContext = createContext<Container | null>(null);
 
@@ -36,6 +38,12 @@ export function DIProvider({ children }: { children: React.ReactNode }) {
 
         c.register(TOKENS.ParkingLocalDS, parkingLocalDS)
             .register(TOKENS.ParkingRepo, parkingRepo);
+
+        const savedParkingLocalDS = new SavedParkingRemoteDataSourceImpl(authDS);
+        const savedParkingRepo = new SavedParkingRepositoryImpl(savedParkingLocalDS);
+
+        c.register(TOKENS.SavedParkingLocalDS, savedParkingLocalDS)
+            .register(TOKENS.SavedParkingRepo, savedParkingRepo);
 
         return c;
     }, []);

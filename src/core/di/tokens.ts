@@ -6,4 +6,6 @@ export const TOKENS = {
   ProductRepo: Symbol("ProductRepo"),
   ParkingLocalDS: Symbol("ParkingLocalDS"),
   ParkingRepo: Symbol("ParkingRepo"),
+  SavedParkingLocalDS: Symbol("SavedParkingLocalDS"),
+  SavedParkingRepo: Symbol("SavedParkingRepo"),
 } as const;
