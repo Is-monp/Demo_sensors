@@ -145,7 +145,8 @@ export function FindMyCarProvider({ children }: { children: ReactNode }) {
     }
 
     const radius = arrivalRadius(target.gps.accuracy, position?.accuracy ?? null);
-    const isArrived = distance !== null && distance <= radius;
+    const sameFloor = floorDeltaDisplay === null || floorDeltaDisplay === 0;
+    const isArrived = distance !== null && distance <= radius && sameFloor;
 
     const currentLevel =
       pressure !== null ? pressureToLevel(pressure) : 'Level P1';
