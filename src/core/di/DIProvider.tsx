@@ -4,6 +4,7 @@ import { TOKENS } from "./tokens";
 
 import { AuthRemoteDataSourceImpl } from "@/src/features/auth/data/datasources/AuthRemoteDataSourceImp";
 import { AuthRepositoryImpl } from "@/src/features/auth/data/repositories/AuthRepositoryImpl";
+import { ParkingHistoryRepositoryImpl } from '@/src/features/history/data/repositories/ParkingHistoryRepositoryImpl';
 import { LocalProductCacheSource } from "@/src/features/products/data/datasources/local/LocalProductCacheSource";
 import { ProductRemoteDataSourceImp } from "@/src/features/products/data/datasources/ProductRemoteDataSourceImp";
 import { ProductRepositoryImpl } from "@/src/features/products/data/repositories/ProductRepositoryImpl";
@@ -30,13 +31,16 @@ export function DIProvider({ children }: { children: React.ReactNode }) {
         c.register(TOKENS.ProductRemoteDS, remoteDS).
             register(TOKENS.LocalProductCacheDS, localCacheDS).
             register(TOKENS.ProductRepo, productRepo);
-
+        
         const savedParkingLocalDS = new SavedParkingRemoteDataSourceImpl(authDS);
         const savedParkingRepo = new SavedParkingRepositoryImpl(savedParkingLocalDS);
 
         c.register(TOKENS.SavedParkingLocalDS, savedParkingLocalDS)
             .register(TOKENS.SavedParkingRepo, savedParkingRepo);
 
+        const historyRepo = new ParkingHistoryRepositoryImpl(savedParkingRepo);
+        c.register(TOKENS.ParkingHistoryRepo, historyRepo);
+        
         return c;
     }, []);
 
