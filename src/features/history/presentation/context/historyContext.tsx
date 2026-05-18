@@ -17,7 +17,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   const di = useDI();
   const repo = di.resolve<ParkingHistoryRepository>(TOKENS.ParkingHistoryRepo);
 
-  console.log('HistoryProvider mounted, repo:', repo); // 👈
+  console.log('HistoryProvider mounted, repo:', repo);
 
   const [history, setHistory] = useState<ParkingHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,12 +27,12 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('History: fetching...'); // 👈
+      console.log('History: fetching...'); 
       const data = await repo.getHistory();
-      console.log('History: got', data.length, 'items', data); // 👈
+      console.log('History: got', data.length, 'items', data); 
       setHistory(data);
     } catch (e: any) {
-      console.log('History: ERROR', e); // 👈
+      console.log('History: ERROR', e); 
       setError(e?.message ?? 'Failed to load history');
     } finally {
       setIsLoading(false);
