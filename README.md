@@ -38,3 +38,6 @@ This is a starter project for building React Native apps with [Expo](https://exp
 
 - User authentication (login, logout, register) with Roble
 - Product management (create, update, delete) with Roble
+
+## Slides
+- https://canva.link/m9u9bm5oif2ql40
