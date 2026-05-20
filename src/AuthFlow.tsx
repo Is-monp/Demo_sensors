@@ -1,5 +1,5 @@
-import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome6 } from "@react-native-vector-icons/fontawesome6";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
@@ -8,12 +8,13 @@ import { useAuth } from "./features/auth/presentation/context/authContext";
 import ForgotPasswordScreen from "./features/auth/presentation/screens/ForgotPasswordScreen";
 import LoginScreen from "./features/auth/presentation/screens/LoginScreen";
 import SignupScreen from "./features/auth/presentation/screens/SignupScreen";
+import FindMyCarScreen from "./features/find-my-car/presentation/screens/FindMyCarScreen";
+import { HistoryProvider } from "./features/history/presentation/context/historyContext";
+import HistoryScreen from "./features/history/presentation/screens/HistoryScreen";
 import { HomeProvider } from "./features/home/presentation/context/homeContext";
 import HomeScreen from "./features/home/presentation/screens/HomeScreen";
-import HistoryScreen from "./features/home/presentation/screens/HistoryScreen";
 import { SavedParkingListProvider } from "./features/save-parking/presentation/context/savedParkingListContext";
 import SaveParkingScreen from "./features/save-parking/presentation/screens/SaveParkingScreen";
-import FindMyCarScreen from "./features/find-my-car/presentation/screens/FindMyCarScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,14 +51,19 @@ function ContentTabs() {
       />
       <Tab.Screen
         name="History"
-        component={HistoryScreen}
         options={{
           tabBarLabel: "History",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="history" size={24} color={color} />
           ),
         }}
-      />
+      >
+        {(props) => (
+          <HistoryProvider>
+            <HistoryScreen {...props} />
+          </HistoryProvider>
+        )}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }
